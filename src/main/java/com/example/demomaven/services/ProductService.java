@@ -1,46 +1,42 @@
 package com.example.demomaven.services;
 
 import com.example.demomaven.models.Product;
+import com.example.demomaven.repositories.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class ProductService {
 
-    List<Product> products = new ArrayList<>(Arrays.asList(
-            new Product(1, "Iphone", 50000),
-            new Product(2, "Samsung", 40000)
-    ));
+    @Autowired
+    private ProductRepository productRepository;
+
 
     public List<Product> getAllProducts() {
-        return products;
+
+        return productRepository.findAll();
     }
 
     public Product getProductById(int id) {
-            return products.stream()
-                    .filter(product -> product.getProductId() == id)
-                    .findFirst().get();
-     }
 
-     public void addProduct(Product product) {
-         System.out.println(product);
-        products.add(product);
-     }
+        return productRepository.findById(id).orElse(new Product());
+    }
 
-     public void updateProduct(Product product) {
-        for(int i = 0; i < products.size(); i++) {
-            if(products.get(i).getProductId() == product.getProductId()) {
-                products.set(i, product);
-            }
-        }
-     }
+    public void addProduct(Product product) {
 
-     public void deleteProduct(int id) {
-        products.stream().
-                filter(product -> product.getProductId() == id)
-                .findFirst().ifPresent(product -> products.remove(product));
-     }
+        productRepository.save(product);
+    }
+
+    public void updateProduct(Product product) {
+
+        productRepository.save(product);
+    }
+
+    public void deleteProduct(int id) {
+
+        productRepository.deleteById(id);
+    }
+
 }
