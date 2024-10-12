@@ -3,6 +3,8 @@ package com.example.demomaven.controllers;
 import com.example.demomaven.models.Product;
 import com.example.demomaven.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,23 +16,23 @@ public class ProductController {
     private ProductService productService;
 
     @GetMapping("/products")
-    private List<Product> getAllProducts(){
-        return productService.getAllProducts();
+    private ResponseEntity<List<Product>> getAllProducts(){
+        return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
     }
 
     @GetMapping("/products/{id}")
-    private Product getProductById(@PathVariable int id){
-        return productService.getProductById(id);
+    private ResponseEntity<Product> getProductById(@PathVariable int id){
+        return new ResponseEntity<>(productService.getProductById(id), HttpStatus.OK);
     }
 
     @PostMapping("products")
-    private void addProduct(@RequestBody Product product){
-        productService.addProduct(product);
+    private ResponseEntity<Product> addProduct(@RequestBody Product product){
+        return new ResponseEntity<>(productService.addProduct(product), HttpStatus.OK);
     }
 
     @PutMapping("products")
-    public void updateProduct(@RequestBody Product product){
-        productService.updateProduct(product);
+    public ResponseEntity<Product> updateProduct(@RequestBody Product product){
+        return new ResponseEntity<>(productService.updateProduct(product), HttpStatus.OK);
     }
 
     @DeleteMapping("products/{id}")

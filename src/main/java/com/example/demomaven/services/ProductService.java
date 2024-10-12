@@ -24,14 +24,16 @@ public class ProductService {
         return productRepository.findById(id).orElse(new Product());
     }
 
-    public void addProduct(Product product) {
+    public Product addProduct(Product product) {
 
         productRepository.save(product);
+        return product;
     }
 
-    public void updateProduct(Product product) {
+    public Product updateProduct(Product product) {
 
         productRepository.save(product);
+        return product;
     }
 
     public void deleteProduct(int id) {
