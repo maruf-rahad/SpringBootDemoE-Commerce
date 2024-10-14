@@ -18,8 +18,6 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
-    @Autowired
-    private ProductRepository productRepository;
 
     @GetMapping("/product")
     private ResponseEntity<List<Product>> getAllProducts() {
@@ -48,6 +46,12 @@ public class ProductController {
         byte[] imageFile = product.getImageData();
         return ResponseEntity.ok().contentType(MediaType.valueOf(product.getImageType()))
                 .body(imageFile);
+    }
+
+    @GetMapping("product/search")
+    private ResponseEntity<List<Product>> getProductsBySearch(@RequestParam String keyword) {
+        List<Product> productList = productService.searchProducts(keyword);
+        return new ResponseEntity<>(productList, HttpStatus.OK);
     }
 
     @PostMapping("product")

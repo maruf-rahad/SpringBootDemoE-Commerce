@@ -26,6 +26,10 @@ public class ProductService {
         return productRepository.findById(id).orElse(new Product());
     }
 
+    public List<Product> searchProducts(String kewword) {
+        return productRepository.searchProducts(kewword);
+    }
+
     public Product addProduct(Product product, MultipartFile imageFile) throws IOException {
 
         product.setImageName(imageFile.getOriginalFilename());
