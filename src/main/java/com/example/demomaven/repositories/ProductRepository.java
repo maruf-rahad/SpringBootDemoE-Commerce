@@ -9,10 +9,10 @@ import java.util.List;
 public interface ProductRepository  extends JpaRepository<Product, Integer> {
 
     @Query("SELECT p from Product p WHERE " +
-    "LOWER(p.productName) LIKE LOWER(concat('%', :kewword, '%')) OR " +
-    "LOWER(p.productBrand) LIKE LOWER(concat('%', :kewword, '%')) OR " +
-    "LOWER(p.productCategory) LIKE LOWER(concat('%', :kewword, '%')) OR " +
-    "LOWER(p.productDescription) LIKE LOWER(concat('%', :kewword, '%'))"
+    "LOWER(p.productName) LIKE LOWER(concat('%', :keyword, '%')) OR " +
+    "LOWER(p.productBrand) LIKE LOWER(concat('%', :keyword, '%')) OR " +
+    "LOWER(p.productCategory) LIKE LOWER(concat('%', :keyword, '%')) OR " +
+    "LOWER(p.productDescription) LIKE LOWER(concat('%', :keyword, '%'))"
     )
     List<Product> searchProducts(String keyword);
 }

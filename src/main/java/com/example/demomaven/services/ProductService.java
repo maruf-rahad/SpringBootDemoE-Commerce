@@ -30,11 +30,12 @@ public class ProductService {
         return productRepository.searchProducts(kewword);
     }
 
-    public Product addProduct(Product product, MultipartFile imageFile) throws IOException {
+    public Product addProduct(Product product) throws IOException {
 
-        product.setImageName(imageFile.getOriginalFilename());
-        product.setImageType(imageFile.getContentType());
-        product.setImageData(imageFile.getBytes());
+        System.out.println("ProductService: add product");
+//        product.setImageName(imageFile.getOriginalFilename());
+//        product.setImageType(imageFile.getContentType());
+//        product.setImageData(imageFile.getBytes());
         return productRepository.save(product);
     }
 

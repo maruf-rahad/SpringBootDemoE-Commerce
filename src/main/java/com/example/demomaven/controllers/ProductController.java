@@ -3,10 +3,12 @@ package com.example.demomaven.controllers;
 import com.example.demomaven.models.Product;
 import com.example.demomaven.repositories.ProductRepository;
 import com.example.demomaven.services.ProductService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +20,18 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @GetMapping("")
+    private String ProductControllerCheck(HttpServletRequest request) {
+        return "Product Controller is working, session id: " + request.getSession().getId();
+    }
+
+    @GetMapping("/csrf-token")
+    public CsrfToken getCsrfToken(HttpServletRequest request) {
+        return (CsrfToken) request.getAttribute("_csrf");
+    }
+
+
 
     @GetMapping("/product")
     private ResponseEntity<List<Product>> getAllProducts() {
@@ -55,11 +69,12 @@ public class ProductController {
     }
 
     @PostMapping("product")
-    private ResponseEntity<?> addProduct(@RequestPart Product product,
-                                         @RequestPart MultipartFile imageFile) throws IOException {
+    private ResponseEntity<?> addProduct(@RequestBody Product product) throws IOException {
+
+        System.out.println("ProductController: addProduct");
 
         try {
-            Product addedProduct = productService.addProduct(product, imageFile);
+            Product addedProduct = productService.addProduct(product);
             return new ResponseEntity<>(addedProduct, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
