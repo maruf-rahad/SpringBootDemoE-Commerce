@@ -28,4 +28,10 @@ public class UserController {
     public Users register(@RequestBody Users user) {
         return userService.registerUser(user);
     }
+
+    @PostMapping("/login")
+    public String login(@RequestBody Users user) {
+        userService.verifyUserForLogin(user);
+        return userService.verifyUserForLogin(user);
+    }
 }
