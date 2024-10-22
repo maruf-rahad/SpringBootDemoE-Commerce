@@ -31,7 +31,6 @@ public class UserController {
 
     @PostMapping("/login")
     public String login(@RequestBody Users user) {
-        userService.verifyUserForLogin(user);
         return userService.verifyUserForLogin(user);
     }
 }
