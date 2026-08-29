@@ -1,5 +1,6 @@
 package com.example.demomaven.services;
 
+import com.example.demomaven.exceptions.ResourceNotFoundException;
 import com.example.demomaven.models.*;
 import com.example.demomaven.models.enums.OrderStatus;
 import com.example.demomaven.repositories.*;
@@ -28,10 +29,10 @@ public class OrderService {
     @Transactional
     public Order placeOrder(String username, String shippingAddress) {
         Users user = usersRepository.findByUsernameOptional(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
         Cart cart = cartRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Cart not found for user: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user: " + username));
 
         if (cart.getItems().isEmpty()) {
             throw new RuntimeException("Cannot place order: Cart is empty!");
@@ -82,7 +83,7 @@ public class OrderService {
     @Transactional
     public Order updateOrderStatusByAdmin(int orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
         order.setOrderStatus(newStatus);
         return orderRepository.save(order);
@@ -95,7 +96,7 @@ public class OrderService {
 
     public Order getOrderById(String username, int orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
         if (!order.getUser().getUsername().equals(username)) {
             throw new RuntimeException("Unauthorized access to order details");

@@ -20,16 +20,12 @@ public class OrderController {
     // --- Customer Endpoints ---
 
     @PostMapping("/checkout")
-    public ResponseEntity<?> checkout(
+    public ResponseEntity<Order> checkout(
             Authentication authentication,
             @RequestParam String shippingAddress) {
-        try {
-            String username = authentication.getName();
-            Order order = orderService.placeOrder(username, shippingAddress);
-            return ResponseEntity.ok(order);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        String username = authentication.getName();
+        Order order = orderService.placeOrder(username, shippingAddress);
+        return ResponseEntity.ok(order);
     }
 
     @GetMapping
