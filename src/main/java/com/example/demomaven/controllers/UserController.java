@@ -3,6 +3,7 @@ package com.example.demomaven.controllers;
 import com.example.demomaven.models.Users;
 import com.example.demomaven.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -32,5 +33,15 @@ public class UserController {
     @PostMapping("/login")
     public String login(@RequestBody Users user) {
         return userService.verifyUserForLogin(user);
+    }
+
+    @PostMapping("/admin/create-admin")
+    public ResponseEntity<?> createAdmin(@RequestBody Users user) {
+        try {
+            Users createdAdmin = userService.createAdmin(user);
+            return ResponseEntity.ok(createdAdmin);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
