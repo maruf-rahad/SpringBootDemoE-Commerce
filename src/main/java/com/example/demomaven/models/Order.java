@@ -1,5 +1,6 @@
 package com.example.demomaven.models;
 
+import com.example.demomaven.models.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,8 +27,10 @@ public class Order {
 
     private Date orderDate;
 
-    private String orderStatus; // e.g., "PLACED", "SHIPPED", "DELIVERED", "CANCELLED"
-
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus orderStatus;
+        
     private Long totalAmount;
 
     private String shippingAddress;

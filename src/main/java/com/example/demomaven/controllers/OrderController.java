@@ -1,6 +1,7 @@
 package com.example.demomaven.controllers;
 
 import com.example.demomaven.models.Order;
+import com.example.demomaven.models.enums.OrderStatus;
 import com.example.demomaven.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,8 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    // --- Customer Endpoints ---
 
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout(
@@ -42,6 +45,25 @@ public class OrderController {
         try {
             String username = authentication.getName();
             return ResponseEntity.ok(orderService.getOrderById(username, orderId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // --- Admin Endpoints ---
+
+    @GetMapping("/admin/all")
+    public ResponseEntity<List<Order>> getAllOrdersForAdmin() {
+        return ResponseEntity.ok(orderService.getAllOrdersForAdmin());
+    }
+
+    @PutMapping("/admin/{orderId}/status")
+    public ResponseEntity<?> updateOrderStatus(
+            @PathVariable int orderId,
+            @RequestParam OrderStatus status) {
+        try {
+            Order updatedOrder = orderService.updateOrderStatusByAdmin(orderId, status);
+            return ResponseEntity.ok(updatedOrder);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

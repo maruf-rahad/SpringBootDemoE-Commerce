@@ -1,6 +1,7 @@
 package com.example.demomaven.services;
 
 import com.example.demomaven.models.*;
+import com.example.demomaven.models.enums.OrderStatus;
 import com.example.demomaven.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,9 @@ public class OrderService {
 
     @Transactional
     public Order placeOrder(String username, String shippingAddress) {
-        Users user = usersRepository.findByUsername(username);
+        Users user = usersRepository.findByUsernameOptional(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
         Cart cart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Cart not found for user: " + username));
 
@@ -37,7 +40,7 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setOrderDate(new Date());
-        order.setOrderStatus("PLACED");
+        order.setOrderStatus(OrderStatus.PLACED); // Assign Enum value
         order.setShippingAddress(shippingAddress);
 
         long totalAmount = 0;
@@ -45,19 +48,16 @@ public class OrderService {
         for (CartItem cartItem : cart.getItems()) {
             Product product = cartItem.getProduct();
 
-            // 1. Check stock availability
             if (product.getQuantity() < cartItem.getQuantity()) {
                 throw new RuntimeException("Insufficient stock for product: " + product.getProductName());
             }
 
-            // 2. Decrement product inventory
             product.setQuantity(product.getQuantity() - cartItem.getQuantity());
             if (product.getQuantity() == 0) {
                 product.setAvailable(false);
             }
             productRepository.save(product);
 
-            // 3. Create OrderItem
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
             orderItem.setProduct(product);
@@ -71,14 +71,21 @@ public class OrderService {
 
         order.setTotalAmount(totalAmount);
 
-        // 4. Save the completed order
         Order savedOrder = orderRepository.save(order);
 
-        // 5. Clear the user's cart
         cart.getItems().clear();
         cartRepository.save(cart);
 
         return savedOrder;
+    }
+
+    @Transactional
+    public Order updateOrderStatusByAdmin(int orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+
+        order.setOrderStatus(newStatus);
+        return orderRepository.save(order);
     }
 
     public List<Order> getUserOrders(String username) {
@@ -95,5 +102,9 @@ public class OrderService {
         }
 
         return order;
+    }
+
+    public List<Order> getAllOrdersForAdmin() {
+        return orderRepository.findAll();
     }
 }

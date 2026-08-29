@@ -33,21 +33,18 @@ public class SecurityConfig {
         return http
                 .csrf(customizer -> customizer.disable())
                 .authorizeHttpRequests(request -> request
-                        // Public endpoints
+                        // Public routes
                         .requestMatchers("/abc", "/register", "/login", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-
-                        // Product public reads
                         .requestMatchers(HttpMethod.GET, "/product/**", "/product/search/**", "/product/image/**").permitAll()
 
-                        // Admin Creation Endpoint (ADMIN ONLY)
+                        // Admin Only routes
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-
-                        // Product Management (ADMIN ONLY)
+                        .requestMatchers("/orders/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/product/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/product/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/product/**").hasRole("ADMIN")
 
-                        // Cart and Orders (CUSTOMER or ADMIN)
+                        // Authenticated customer/admin routes
                         .requestMatchers("/cart/**", "/orders/**").hasAnyRole("CUSTOMER", "ADMIN")
 
                         .anyRequest().authenticated())
