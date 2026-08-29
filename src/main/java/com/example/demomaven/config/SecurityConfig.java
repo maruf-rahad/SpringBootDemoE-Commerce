@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/product/**").hasRole("ADMIN")
 
                         // Authenticated customer/admin routes
+                        .requestMatchers("/user/**").authenticated()
                         .requestMatchers("/cart/**", "/orders/**").hasAnyRole("CUSTOMER", "ADMIN")
 
                         .anyRequest().authenticated())

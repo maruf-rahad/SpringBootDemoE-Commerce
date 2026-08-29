@@ -1,14 +1,21 @@
 package com.example.demomaven.services;
 
+import com.example.demomaven.models.dto.ChangePasswordRequest;
+import com.example.demomaven.models.dto.UpdateProfileRequest;
+import com.example.demomaven.models.dto.UserProfileResponse;
+import com.example.demomaven.exceptions.BadRequestException;
+import com.example.demomaven.exceptions.ResourceNotFoundException;
 import com.example.demomaven.models.Users;
 import com.example.demomaven.models.enums.Role;
 import com.example.demomaven.repositories.UsersRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,16 +31,20 @@ public class UserService {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     private BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(10);
 
-    public List<Users> getAllUsers(){
+    // --- Authentication & User Management ---
+    public List<Users> getAllUsers() {
         return usersRepository.findAll();
     }
 
     public Users registerUser(Users user) {
         Users existingUser = usersRepository.findByUsername(user.getUsername());
         if (existingUser != null) {
-            throw new RuntimeException("Username '" + user.getUsername() + "' is already taken!");
+            throw new BadRequestException("Username '" + user.getUsername() + "' is already taken!");
         }
 
         // Default role if not provided
@@ -50,24 +61,74 @@ public class UserService {
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
-        if(authentication.isAuthenticated()) {
+        if (authentication.isAuthenticated()) {
             return jwtService.generateToken(user.getUsername());
-        }
-        else{
-            return "Fail";
+        } else {
+            throw new BadRequestException("Invalid username or password");
         }
     }
 
     public Users createAdmin(Users newAdmin) {
-        // Check if username is taken
         if (usersRepository.findByUsername(newAdmin.getUsername()) != null) {
-            throw new RuntimeException("Username '" + newAdmin.getUsername() + "' is already taken!");
+            throw new BadRequestException("Username '" + newAdmin.getUsername() + "' is already taken!");
         }
 
-        // Force role to ROLE_ADMIN
         newAdmin.setRole(Role.ROLE_ADMIN);
         newAdmin.setPassword(bCryptPasswordEncoder.encode(newAdmin.getPassword()));
 
         return usersRepository.save(newAdmin);
+    }
+
+    // --- Profile & Password Management ---
+
+    public UserProfileResponse getUserProfile(String username) {
+        Users user = usersRepository.findByUsername(username);
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found: " + username);
+        }
+
+        UserProfileResponse response = modelMapper.map(user, UserProfileResponse.class);
+        if (user.getRole() != null) {
+            response.setRole(user.getRole().name());
+        }
+        return response;
+    }
+
+    @Transactional
+    public UserProfileResponse updateUserProfile(String username, UpdateProfileRequest request) {
+        Users user = usersRepository.findByUsername(username);
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found: " + username);
+        }
+
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
+        if (request.getPhoneNumber() != null) user.setPhoneNumber(request.getPhoneNumber());
+        if (request.getAddress() != null) user.setAddress(request.getAddress());
+
+        Users updatedUser = usersRepository.save(user);
+
+        UserProfileResponse response = modelMapper.map(updatedUser, UserProfileResponse.class);
+        if (updatedUser.getRole() != null) {
+            response.setRole(updatedUser.getRole().name());
+        }
+        return response;
+    }
+
+    @Transactional
+    public void changePassword(String username, ChangePasswordRequest request) {
+        Users user = usersRepository.findByUsername(username);
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found: " + username);
+        }
+
+        // Verify current password match using BCryptPasswordEncoder
+        if (!bCryptPasswordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password provided is same as old password.");
+        }
+
+        user.setPassword(bCryptPasswordEncoder.encode(request.getNewPassword()));
+        usersRepository.save(user);
     }
 }
