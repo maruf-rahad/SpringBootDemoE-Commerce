@@ -1,7 +1,6 @@
 package com.example.demomaven.controllers;
 
 import com.example.demomaven.models.Product;
-import com.example.demomaven.repositories.ProductRepository;
 import com.example.demomaven.services.ProductService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @GetMapping("")
+    @GetMapping("/abc")
     private String ProductControllerCheck(HttpServletRequest request) {
         return "Product Controller is working, session id: " + request.getSession().getId();
     }

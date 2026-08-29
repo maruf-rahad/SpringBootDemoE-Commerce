@@ -30,9 +30,14 @@ public class UserService {
     }
 
     public Users registerUser(Users user) {
+        // CHECK IF USERNAME IS ALREADY TAKEN
+        Users existingUser = usersRepository.findByUsername(user.getUsername());
+        if (existingUser != null) {
+            throw new RuntimeException("Username '" + user.getUsername() + "' is already taken!");
+        }
 
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        return usersRepository.save(user );
+        return usersRepository.save(user);
     }
 
     public String verifyUserForLogin(Users user) {
