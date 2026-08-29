@@ -25,8 +25,6 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-    private Date orderDate;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus orderStatus;
@@ -34,6 +32,10 @@ public class Order {
     private Long totalAmount;
 
     private String shippingAddress;
+
+    private Date createdAt;
+
+    private Date updatedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();

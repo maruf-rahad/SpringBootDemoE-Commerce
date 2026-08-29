@@ -1,6 +1,8 @@
 package com.example.demomaven.controllers;
 
 import com.example.demomaven.models.Order;
+import com.example.demomaven.models.dto.OrderTrackingResponse;
+import com.example.demomaven.models.dto.UpdateOrderStatusRequest;
 import com.example.demomaven.models.enums.OrderStatus;
 import com.example.demomaven.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,5 +65,29 @@ public class OrderController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    // Customer: Track specific order
+    @GetMapping("/{orderId}/track")
+    public ResponseEntity<OrderTrackingResponse> trackOrder(
+            Authentication authentication,
+            @PathVariable int orderId) {
+        return ResponseEntity.ok(orderService.getOrderTracking(authentication.getName(), orderId));
+    }
+
+    // Customer: Cancel an order before processing
+    @PutMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderTrackingResponse> cancelOrder(
+            Authentication authentication,
+            @PathVariable int orderId) {
+        return ResponseEntity.ok(orderService.cancelOrder(authentication.getName(), orderId));
+    }
+
+    // Admin Only: Update order status workflow
+    @PutMapping("/admin/{orderId}/status")
+    public ResponseEntity<OrderTrackingResponse> updateOrderStatus(
+            @PathVariable int orderId,
+            @RequestBody UpdateOrderStatusRequest request) {
+        return ResponseEntity.ok(orderService.updateOrderStatus(orderId, request.getStatus()));
     }
 }

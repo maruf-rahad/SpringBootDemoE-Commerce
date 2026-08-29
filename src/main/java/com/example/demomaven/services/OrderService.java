@@ -1,7 +1,9 @@
 package com.example.demomaven.services;
 
+import com.example.demomaven.exceptions.BadRequestException;
 import com.example.demomaven.exceptions.ResourceNotFoundException;
 import com.example.demomaven.models.*;
+import com.example.demomaven.models.dto.OrderTrackingResponse;
 import com.example.demomaven.models.enums.OrderStatus;
 import com.example.demomaven.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +42,7 @@ public class OrderService {
 
         Order order = new Order();
         order.setUser(user);
-        order.setOrderDate(new Date());
+        order.setCreatedAt((new Date()));
         order.setOrderStatus(OrderStatus.PLACED); // Assign Enum value
         order.setShippingAddress(shippingAddress);
 
@@ -107,5 +109,82 @@ public class OrderService {
 
     public List<Order> getAllOrdersForAdmin() {
         return orderRepository.findAll();
+    }
+
+    public OrderTrackingResponse getOrderTracking(String username, int orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
+
+        // Ensure users can only track their own orders (unless ADMIN)
+        if (!order.getUser().getUsername().equals(username) &&
+                !order.getUser().getRole().name().equals("ROLE_ADMIN")) {
+            throw new BadRequestException("Access denied: You cannot view this order.");
+        }
+
+        return new OrderTrackingResponse(
+                order.getId(),
+                order.getOrderStatus(),
+                order.getTotalAmount(),
+                order.getCreatedAt(),
+                order.getUpdatedAt()
+        );
+    }
+
+    @Transactional
+    public OrderTrackingResponse updateOrderStatus(int orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
+
+        OrderStatus currentStatus = order.getOrderStatus();
+
+        // Prevent updates on terminal states
+        if (currentStatus == OrderStatus.DELIVERED || currentStatus == OrderStatus.CANCELLED) {
+            throw new BadRequestException("Cannot change status of an order that is already " + currentStatus);
+        }
+
+        // Validate invalid transitions (e.g., cannot ship a cancelled order)
+        if (newStatus == OrderStatus.DELIVERED && currentStatus != OrderStatus.SHIPPED) {
+            throw new BadRequestException("Order must be SHIPPED before it can be marked DELIVERED.");
+        }
+
+        order.setOrderStatus(newStatus);
+        order.setUpdatedAt(new Date());
+
+        Order savedOrder = orderRepository.save(order);
+
+        return new OrderTrackingResponse(
+                savedOrder.getId(),
+                savedOrder.getOrderStatus(),
+                savedOrder.getTotalAmount(),
+                savedOrder.getCreatedAt(),
+                savedOrder.getUpdatedAt()
+        );
+    }
+
+    @Transactional
+    public OrderTrackingResponse cancelOrder(String username, int orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
+
+        if (!order.getUser().getUsername().equals(username)) {
+            throw new BadRequestException("Access denied: You can only cancel your own orders.");
+        }
+
+        if (order.getOrderStatus() != OrderStatus.PLACED) {
+            throw new BadRequestException("Order can only be cancelled while in PLACED status.");
+        }
+
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        order.setUpdatedAt(new Date());
+
+        Order savedOrder = orderRepository.save(order);
+
+        return new OrderTrackingResponse(
+                savedOrder.getId(),
+                savedOrder.getOrderStatus(),
+                savedOrder.getTotalAmount(),
+                savedOrder.getCreatedAt(),
+                savedOrder.getUpdatedAt()
+        );
     }
 }
